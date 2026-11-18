@@ -11,7 +11,7 @@
 @endsection
 
 @section('styles')
-<style>
+<style nonce="{{ Vite::cspNonce() }}">
     .panel-content > .container-fluid.hrd-page-shell.hrd-vacancies-page {
         width: 100% !important;
         max-width: none !important;
@@ -565,7 +565,7 @@
                                     @if ($vacancy->status !== 'published')
                                         <form method="POST"
                                               action="{{ route($routePrefix . '.vacancies.publish', $vacancy) }}"
-                                              onsubmit="return confirm('Terbitkan lowongan ini?')">
+                                              data-confirm="Terbitkan lowongan ini?">
                                             @csrf
                                             @method('PATCH')
                                             <button class="btn btn-outline-success"
@@ -579,7 +579,7 @@
                                     @if ($vacancy->status === 'published')
                                         <form method="POST"
                                               action="{{ route($routePrefix . '.vacancies.close', $vacancy) }}"
-                                              onsubmit="return confirm('Tutup pendaftaran lowongan ini?')">
+                                              data-confirm="Tutup pendaftaran lowongan ini?">
                                             @csrf
                                             @method('PATCH')
                                             <button class="btn btn-outline-warning"
@@ -593,7 +593,7 @@
                                     @if ($vacancy->applications_count === 0)
                                         <form method="POST"
                                               action="{{ route($routePrefix . '.vacancies.destroy', $vacancy) }}"
-                                              onsubmit="return confirm('Yakin ingin menghapus lowongan ini?')">
+                                              data-confirm="Yakin ingin menghapus lowongan ini?">
                                             @csrf
                                             @method('DELETE')
                                             <button class="btn btn-outline-danger"

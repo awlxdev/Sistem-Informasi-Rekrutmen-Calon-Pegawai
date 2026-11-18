@@ -3,7 +3,7 @@
 @section('title', 'Edit Pengguna')
 
 @push('styles')
-<style>
+<style nonce="{{ Vite::cspNonce() }}">
     .admin-user-form-page {
         --user-emerald: #193c30;
         --user-emerald-dark: #10362b;

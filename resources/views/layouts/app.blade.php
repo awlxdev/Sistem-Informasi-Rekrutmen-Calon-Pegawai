@@ -12,11 +12,9 @@
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/vendor.css', 'resources/js/vendor.js', 'resources/css/app.css', 'resources/js/app.js'])
 
-    <style>
+    <style nonce="{{ Vite::cspNonce() }}">
         :root {
             --primary: #164438;
             --primary-dark: #10362d;
@@ -1188,9 +1186,8 @@
         @yield('content')
     @endauth
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 
-    <script>
+    <script nonce="{{ Vite::cspNonce() }}">
         document.addEventListener('DOMContentLoaded', function () {
             const toggle = document.getElementById('panelToggle');
             const overlay = document.getElementById('panelOverlay');
@@ -1210,6 +1207,28 @@
                     document.body.classList.remove('panel-sidebar-open');
                 });
             });
+        });
+
+        // Konfirmasi sebelum formulir dijalankan.
+        document.addEventListener('submit', function (event) {
+            const form = event.target.closest('form[data-confirm]');
+
+            if (!form) return;
+
+            const message = form.dataset.confirm;
+
+            if (!window.confirm(message)) {
+                event.preventDefault();
+            }
+        });
+
+        // Menjalankan fungsi cetak dokumen.
+        document.addEventListener('click', function (event) {
+            const button = event.target.closest('[data-print]');
+
+            if (!button) return;
+
+            window.print();
         });
     </script>
 

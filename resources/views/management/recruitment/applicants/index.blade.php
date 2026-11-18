@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @push('styles')
-<style>
+<style nonce="{{ Vite::cspNonce() }}">
     /* =====================================================
        HRD DATA PELAMAR - PREMIUM SOFT 3D
        CSS KHUSUS HALAMAN HRD

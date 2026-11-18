@@ -232,7 +232,14 @@ class VacancyController extends Controller
 
         $applications = $applicant
             ? $applicant->applications()
-                ->with(['vacancy', 'documents'])
+                ->with([
+                    'vacancy',
+                    'documents',
+                    'interviewSchedules' => function ($query) {
+                        $query->where('status', 'scheduled')
+                            ->latest('scheduled_at');
+                    },
+                ])
                 ->latest('submitted_at')
                 ->paginate(10)
             : collect();

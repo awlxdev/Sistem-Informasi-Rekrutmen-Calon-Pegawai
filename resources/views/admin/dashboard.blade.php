@@ -3,7 +3,7 @@
 @section('title', 'Dashboard Administrator')
 
 @push('styles')
-<style>
+<style nonce="{{ Vite::cspNonce() }}">
     /* ==========================================
        ADMINISTRATOR DASHBOARD
     ========================================== */

@@ -8,6 +8,8 @@ use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -30,7 +32,6 @@ class AuthController extends Controller
             'name' => ['required', 'string', 'max:150'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
-            'captcha_answer' => ['required', 'string', 'max:100'],
         ], [
             'name.required' => 'Nama lengkap wajib diisi.',
             'email.required' => 'Email wajib diisi.',
@@ -38,20 +39,9 @@ class AuthController extends Controller
             'email.unique' => 'Email sudah terdaftar.',
             'password.min' => 'Password minimal 8 karakter.',
             'password.confirmed' => 'Konfirmasi password tidak cocok.',
-            'captcha_answer.required' => 'Konfirmasi CAPTCHA wajib diisi.',
         ]);
 
-        $expected = $request->session()->get('captcha_answer');
-
-        if (
-            !$expected ||
-            mb_strtolower(trim($validated['captcha_answer'])) !==
-            mb_strtolower(trim($expected))
-        ) {
-            throw ValidationException::withMessages([
-                'captcha_answer' => 'Jawaban CAPTCHA tidak benar.',
-            ]);
-        }
+        $this->verifyHCaptcha($request);
 
         $user = DB::transaction(function () use ($validated): User {
             $user = User::create([
@@ -70,8 +60,6 @@ class AuthController extends Controller
             return $user;
         });
 
-        $request->session()->forget('captcha_answer');
-
         Auth::login($user);
         $request->session()->regenerate();
 
@@ -86,32 +74,18 @@ class AuthController extends Controller
         $credentials = $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required', 'string'],
-            'captcha_answer' => ['required', 'string'],
         ], [
             'email.required' => 'Email wajib diisi.',
             'password.required' => 'Password wajib diisi.',
-            'captcha_answer.required' => 'Konfirmasi CAPTCHA wajib diisi.',
         ]);
 
-        $expected = $request->session()->get('captcha_answer');
-
-        if (
-            !$expected ||
-            mb_strtolower(trim($credentials['captcha_answer'])) !==
-            mb_strtolower(trim($expected))
-        ) {
-            throw ValidationException::withMessages([
-                'captcha_answer' => 'Jawaban CAPTCHA tidak benar.',
-            ]);
-        }
+        $this->verifyHCaptcha($request);
 
         $authenticated = Auth::attempt([
             'email' => $credentials['email'],
             'password' => $credentials['password'],
             'is_active' => true,
         ], $request->boolean('remember'));
-
-        $request->session()->forget('captcha_answer');
 
         if (!$authenticated) {
             throw ValidationException::withMessages([
@@ -137,6 +111,56 @@ class AuthController extends Controller
     }
 
     /**
+     * Memverifikasi token hCaptcha langsung ke server hCaptcha.
+     */
+    private function verifyHCaptcha(Request $request): void
+    {
+        $token = $request->input('h-captcha-response');
+
+        if (!is_string($token) || trim($token) === '') {
+            throw ValidationException::withMessages([
+                'h-captcha-response' => 'Silakan selesaikan verifikasi CAPTCHA.',
+            ]);
+        }
+
+        try {
+            $response = Http::asForm()
+                ->timeout(10)
+                ->post('https://api.hcaptcha.com/siteverify', [
+                    'secret' => config('services.hcaptcha.secret_key'),
+                    'response' => $token,
+                    'remoteip' => $request->ip(),
+                    'sitekey' => config('services.hcaptcha.site_key'),
+                ]);
+
+            $payload = $response->json();
+
+            $verified = $response->successful()
+                && data_get($payload, 'success') === true;
+
+            if (!$verified) {
+                Log::warning('hCaptcha verification rejected', [
+                    'http_status' => $response->status(),
+                    'error_codes' => data_get($payload, 'error-codes', []),
+                    'hostname' => data_get($payload, 'hostname'),
+                    'success' => data_get($payload, 'success'),
+                ]);
+            }
+        } catch (\Throwable $exception) {
+            Log::error('hCaptcha Siteverify request failed', [
+                'exception' => get_class($exception),
+            ]);
+
+            $verified = false;
+        }
+
+        if (!$verified) {
+            throw ValidationException::withMessages([
+                'h-captcha-response' => 'Verifikasi CAPTCHA gagal atau kedaluwarsa. Silakan coba kembali.',
+            ]);
+        }
+    }
+    /**
      * Menolak akun dengan role yang tidak dikenali.
      */
     private function rejectUnknownRole(Request $request): RedirectResponse
@@ -151,6 +175,7 @@ class AuthController extends Controller
                 'email' => 'Role akun tidak dikenali. Silakan hubungi administrator.',
             ]);
     }
+
     public function logout(Request $request): RedirectResponse
     {
         Auth::logout();

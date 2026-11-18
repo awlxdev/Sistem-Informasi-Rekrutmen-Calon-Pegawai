@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @push('styles')
-<style>
+<style nonce="{{ Vite::cspNonce() }}">
     /* =====================================================
        HRD SELECTION - PREMIUM SOFT 3D
        CSS HANYA AKTIF PADA HALAMAN HRD

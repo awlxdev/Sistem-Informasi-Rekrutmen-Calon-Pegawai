@@ -120,6 +120,12 @@ Route::prefix('admin')->name('admin.')->middleware(['role:admin', 'verified'])->
             ->middleware('throttle:10,1')
             ->name('vacancies.apply');
 
+        // Surat kelulusan khusus milik pelamar yang sedang login
+        Route::get('/lamaran/{application}/surat-kelulusan', [
+            \App\Http\Controllers\RecruitmentManagementController::class,
+            'printAcceptanceLetter'
+        ])->name('applications.acceptance-print');
+
         // Riwayat dan status lamaran
         Route::get('/lamaran', [VacancyController::class, 'applications'])
             ->name('applications.index');
@@ -146,6 +152,9 @@ Route::middleware(['auth', 'role:admin', 'verified'])
         Route::get('/jadwal-pendaftaran', [VacancyManagementController::class, 'schedule'])
             ->name('schedule');
 
+        Route::get('/vacancies/regions/{province}/regencies', [VacancyManagementController::class, 'regencies'])
+            ->whereNumber('province')
+            ->name('vacancies.regencies');
         Route::get('/vacancies', [VacancyManagementController::class, 'index'])
             ->name('vacancies.index');
 
@@ -178,6 +187,9 @@ Route::middleware(['auth', 'role:hrd', 'verified'])
         Route::get('/jadwal-pendaftaran', [VacancyManagementController::class, 'schedule'])
             ->name('schedule');
 
+        Route::get('/vacancies/regions/{province}/regencies', [VacancyManagementController::class, 'regencies'])
+            ->whereNumber('province')
+            ->name('vacancies.regencies');
         Route::get('/vacancies', [VacancyManagementController::class, 'index'])
             ->name('vacancies.index');
 
@@ -310,6 +322,10 @@ Route::middleware(['auth', 'role:hrd', 'verified'])
             'review'
         ])->name('applications.review');
 
+        Route::post('/applications/{application}/interviews', [
+            \App\Http\Controllers\RecruitmentManagementController::class,
+            'storeInterviewSchedule'
+        ])->name('applications.interviews.store');
         Route::patch('/applications/{application}/documents/{document}/verify', [
             \App\Http\Controllers\RecruitmentManagementController::class,
             'verifyDocument'

@@ -153,7 +153,7 @@
 @endsection
 
 @push('styles')
-<style>
+<style nonce="{{ Vite::cspNonce() }}">
 .applicant-page { color:#26342e; }
 .search-panel {
     padding:20px;

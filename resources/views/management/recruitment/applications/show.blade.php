@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @push('styles')
-<style>
+<style nonce="{{ Vite::cspNonce() }}">
     :is(.admin-application-detail-page, .hrd-application-detail-page) {
         --detail-emerald: #193c30;
         --detail-dark: #10362b;
@@ -474,6 +474,106 @@
                 </div>
             @endif
 
+            @if($allowReview && in_array($application->status, ['reviewing', 'accepted'], true))
+                @php
+                    $activeInterview = $application->interviewSchedules
+                        ->firstWhere('status', 'scheduled');
+
+                    $interviewDateValue = $activeInterview
+                        ? substr($activeInterview->getRawOriginal('scheduled_at'), 0, 16)
+                        : '';
+                @endphp
+
+                <div class="card border-0 shadow-sm rounded-4 mb-4">
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold mb-2">
+                            <i class="bi bi-calendar2-check text-success me-2"></i>
+                            Jadwalkan Interview
+                        </h5>
+
+                        <p class="text-muted small mb-3">
+                            Atur jadwal wawancara pelamar. Seluruh waktu menggunakan WIT (Asia/Jayapura).
+                        </p>
+
+                        @if($activeInterview)
+                            <div class="alert alert-info rounded-3 small">
+                                <strong>Jadwal aktif saat ini</strong><br>
+                                {{ \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $activeInterview->getRawOriginal('scheduled_at'), 'Asia/Jayapura')->format('d M Y, H:i') }} WIT
+                                <br>
+                                Metode: {{ $activeInterview->method === 'online' ? 'Online' : 'Tatap muka' }}
+                            </div>
+                        @endif
+
+                        <form method="POST"
+                              action="{{ route('hrd.applications.interviews.store', $application) }}">
+                            @csrf
+
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Tanggal dan Waktu (WIT)</label>
+                                <input
+                                    type="datetime-local"
+                                    name="scheduled_at"
+                                    class="form-control"
+                                    value="{{ old('scheduled_at', $interviewDateValue) }}"
+                                    required
+                                >
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Metode Interview</label>
+                                <select name="method" id="interviewMethod" class="form-select" required>
+                                    <option value="offline" @selected(old('method', $activeInterview?->method) === 'offline')>
+                                        Tatap muka / Offline
+                                    </option>
+                                    <option value="online" @selected(old('method', $activeInterview?->method) === 'online')>
+                                        Online
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3" id="interviewLocationGroup">
+                                <label class="form-label fw-semibold">Lokasi Interview</label>
+                                <input
+                                    type="text"
+                                    name="location"
+                                    class="form-control"
+                                    maxlength="255"
+                                    value="{{ old('location', $activeInterview?->location) }}"
+                                    placeholder="Contoh: Ruang Rapat Kantor"
+                                >
+                            </div>
+
+                            <div class="mb-3" id="interviewMeetingGroup">
+                                <label class="form-label fw-semibold">Link Meeting</label>
+                                <input
+                                    type="url"
+                                    name="meeting_url"
+                                    class="form-control"
+                                    maxlength="2048"
+                                    value="{{ old('meeting_url', $activeInterview?->meeting_url) }}"
+                                    placeholder="https://meet.google.com/..."
+                                >
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Catatan untuk Pelamar</label>
+                                <textarea
+                                    name="notes"
+                                    rows="3"
+                                    maxlength="3000"
+                                    class="form-control"
+                                    placeholder="Tuliskan arahan atau persiapan interview..."
+                                >{{ old('notes', $activeInterview?->notes) }}</textarea>
+                            </div>
+
+                            <button type="submit" class="btn btn-success w-100 rounded-3">
+                                <i class="bi bi-calendar-check me-1"></i>
+                                {{ $activeInterview ? 'Perbarui Jadwal Interview' : 'Simpan Jadwal Interview' }}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            @endif
             <div class="card border-0 shadow-sm rounded-4">
                 <div class="card-body p-4">
                     <h6 class="fw-bold mb-3">Riwayat Pemeriksaan</h6>

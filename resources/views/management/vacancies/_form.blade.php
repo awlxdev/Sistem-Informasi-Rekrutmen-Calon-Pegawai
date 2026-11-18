@@ -17,7 +17,10 @@
 @endif
 
 <div class="dashboard-card p-3 p-md-4">
-    <form method="POST" action="{{ $formAction }}">
+    <form method="POST"
+          action="{{ $formAction }}"
+          data-regencies-url="{{ route($routePrefix . '.vacancies.regencies', ['province' => '__PROVINCE__']) }}"
+          data-initial-regency-id="{{ old('regency_id', $selectedRegencyId ?? '') }}">
         @csrf
 
         @if ($formMethod === 'PUT')
@@ -68,14 +71,38 @@
             </div>
 
             <div class="col-md-6">
-                <label class="form-label">Lokasi Penempatan</label>
-                <input type="text"
-                       name="location"
-                       class="form-control"
-                       maxlength="150"
-                       value="{{ old('location', $vacancy?->location) }}"
-                       placeholder="Contoh: Kota Sorong">
+                <label class="form-label">Provinsi</label>
+
+                <select name="province_id" id="province_id" class="form-select">
+                    <option value="">Pilih provinsi</option>
+                    @foreach ($provinces as $province)
+                        <option value="{{ $province->id }}"
+                            @selected((string) old('province_id', $selectedProvinceId ?? '') === (string) $province->id)>
+                            {{ $province->name }}
+                        </option>
+                    @endforeach
+                </select>
             </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Kabupaten/Kota</label>
+
+                <select name="regency_id"
+                        id="regency_id"
+                        class="form-select"
+                        disabled>
+                    <option value="">Pilih kabupaten/kota</option>
+                </select>
+
+                <div class="form-text">
+                    Pilih provinsi terlebih dahulu untuk menampilkan kabupaten/kota.
+                </div>
+            </div>
+
+            <input type="hidden"
+                   name="location"
+                   id="location"
+                   value="{{ old('location', $vacancy?->location) }}">
         </div>
 
         <hr class="divider-soft my-4">
@@ -190,3 +217,107 @@
         </div>
     </form>
 </div>
+@push('scripts')
+<script nonce="{{ Vite::cspNonce() }}">
+document.addEventListener('DOMContentLoaded', function () {
+    const provinceSelect = document.getElementById('province_id');
+    const regencySelect = document.getElementById('regency_id');
+    const locationInput = document.getElementById('location');
+    const form = provinceSelect?.closest('form');
+
+    if (!provinceSelect || !regencySelect || !locationInput || !form) return;
+
+    const regenciesUrl = form.dataset.regenciesUrl;
+    const initialRegencyId = form.dataset.initialRegencyId || '';
+
+    function updateLocation() {
+        const regencyOption = regencySelect.selectedOptions[0];
+        const provinceOption = provinceSelect.selectedOptions[0];
+
+        if (
+            regencySelect.value &&
+            provinceSelect.value &&
+            regencyOption &&
+            provinceOption
+        ) {
+            locationInput.value =
+                regencyOption.textContent.trim() + ', ' +
+                provinceOption.textContent.trim();
+        } else {
+            locationInput.value = '';
+        }
+    }
+
+    async function loadRegencies(provinceId, selectedId = '') {
+        regencySelect.innerHTML =
+            '<option value="">Memuat kabupaten/kota...</option>';
+
+        regencySelect.disabled = true;
+
+        if (!provinceId) {
+            regencySelect.innerHTML =
+                '<option value="">Pilih kabupaten/kota</option>';
+
+            return;
+        }
+
+        try {
+            const url = regenciesUrl.replace(
+                '__PROVINCE__',
+                encodeURIComponent(provinceId)
+            );
+
+            const response = await fetch(url, {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin'
+            });
+
+            if (!response.ok) {
+                throw new Error('Gagal mengambil data kabupaten/kota.');
+            }
+
+            const data = await response.json();
+
+            regencySelect.innerHTML =
+                '<option value="">Pilih kabupaten/kota</option>';
+
+            data.forEach(function (regency) {
+                const option = document.createElement('option');
+
+                option.value = regency.id;
+                option.textContent = regency.name;
+                option.selected =
+                    String(regency.id) === String(selectedId);
+
+                regencySelect.appendChild(option);
+            });
+
+            regencySelect.disabled = false;
+
+            updateLocation();
+        } catch (error) {
+            console.error(error);
+
+            regencySelect.innerHTML =
+                '<option value="">Gagal memuat data. Silakan coba lagi.</option>';
+
+            regencySelect.disabled = true;
+        }
+    }
+
+    provinceSelect.addEventListener('change', function () {
+        locationInput.value = '';
+        loadRegencies(this.value);
+    });
+
+    regencySelect.addEventListener('change', updateLocation);
+
+    if (provinceSelect.value) {
+        loadRegencies(provinceSelect.value, initialRegencyId);
+    }
+});
+</script>
+@endpush

@@ -3,7 +3,7 @@
 @section('title', 'Pengaturan Sistem')
 
 @push('styles')
-<style>
+<style nonce="{{ Vite::cspNonce() }}">
     /* ==========================================
        ADMIN - PENGATURAN SISTEM
        Premium Soft 3D / Emerald / Ivory / Gold

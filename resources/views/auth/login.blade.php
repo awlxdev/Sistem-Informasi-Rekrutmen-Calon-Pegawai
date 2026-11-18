@@ -3,7 +3,7 @@
 @section('title', 'Login')
 
 @section('navbar')
-<style>
+<style nonce="{{ Vite::cspNonce() }}">
     .navbar-main {
         display: none !important;
     }
@@ -11,7 +11,7 @@
 @endsection
 
 @push('styles')
-<style>
+<style nonce="{{ Vite::cspNonce() }}">
     body:has(.auth-premium-page) {
         background: #f5f3ec !important;
         min-height: 100vh;
@@ -419,47 +419,25 @@
                     </div>
                 </div>
 
-                <div class="mb-3">
-                    <div class="d-flex align-items-center justify-content-between mb-2">
-                        <label for="captcha_answer" class="form-label mb-0">
-                            Verifikasi CAPTCHA
-                        </label>
+                <div class="mb-4">
+    <label class="form-label">
+        Verifikasi Keamanan
+    </label>
 
-                        <button
-                            type="button"
-                            class="auth-refresh-captcha"
-                            id="refreshCaptcha"
-                        >
-                            <i class="bi bi-arrow-clockwise me-1"></i>Ganti soal
-                        </button>
-                    </div>
+    <div class="auth-captcha-panel">
+        <div class="small text-muted mb-2">
+            Selesaikan verifikasi berikut untuk melanjutkan.
+        </div>
 
-                    <div class="auth-captcha-panel mb-2">
-                        <div class="small text-muted mb-2">
-                            Ketik nama daerah berikut:
-                        </div>
-                        <div
-                            class="auth-captcha-question fw-bold fs-5"
-                            id="captchaQuestion"
-                            aria-live="polite"
-                         data-captcha-url="{{ route('captcha.generate') }}">
-                            Memuat CAPTCHA...
-                        </div>
-                    </div>
+        <div
+            class="h-captcha"
+            data-sitekey="{{ config('services.hcaptcha.site_key') }}"
+            data-theme="light"
+            data-lang="id"
+        ></div>
+    </div>
+</div>
 
-                    <div class="auth-input-wrap">
-                        <i class="bi bi-shield-check"></i>
-                        <input
-                            id="captcha_answer"
-                            type="text"
-                            name="captcha_answer"
-                            class="form-control"
-                            placeholder="Ketik nama daerah"
-                            autocomplete="off"
-                            required
-                        >
-                    </div>
-                </div>
 
                 <div class="form-check mb-4">
                     <input
@@ -500,49 +478,9 @@
 @endsection
 
 @push('scripts')
-<script>
-    async function loadCaptcha() {
-        const question = document.getElementById('captchaQuestion');
-        const answer = document.getElementById('captcha_answer');
-
-        if (!question || !answer) {
-            return;
-        }
-
-        question.textContent = 'Memuat CAPTCHA...';
-
-        try {
-            const response = await fetch(question.dataset.captchaUrl, {
-                method: 'GET',
-                credentials: 'same-origin',
-                headers: {
-                    'Accept': 'application/json'
-                }
-            });
-
-            if (!response.ok) {
-                throw new Error('Gagal mengambil CAPTCHA');
-            }
-
-            const data = await response.json();
-
-            if (!data || !data.question) {
-                throw new Error('Data CAPTCHA tidak valid');
-            }
-
-            question.textContent = data.question;
-            answer.value = '';
-        } catch (error) {
-            question.textContent = 'CAPTCHA tidak tersedia. Muat ulang halaman.';
-        }
-    }
-
-    const refreshCaptchaButton = document.getElementById('refreshCaptcha');
-
-    if (refreshCaptchaButton) {
-        refreshCaptchaButton.addEventListener('click', loadCaptcha);
-    }
-
-    loadCaptcha();
-</script>
+<script
+    src="https://js.hcaptcha.com/1/api.js"
+    async
+    defer
+></script>
 @endpush

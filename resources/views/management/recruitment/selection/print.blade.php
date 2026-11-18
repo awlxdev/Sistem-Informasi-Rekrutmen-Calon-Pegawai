@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DAFTAR PELAMAR LULUS SELEKSI ADMINISTRASI</title>
 
-    <style>
+    <style nonce="{{ Vite::cspNonce() }}">
         * {
             box-sizing: border-box;
         }
@@ -310,7 +310,7 @@
             Kembali
         </a>
 
-        <button type="button" class="print-button" onclick="window.print()">
+        <button type="button" class="print-button" data-print>
             Cetak / Simpan PDF
         </button>
     </div>

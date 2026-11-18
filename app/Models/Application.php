@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\InterviewSchedule;
 
 class Application extends Model
 {
@@ -47,4 +48,12 @@ class Application extends Model
     {
         return $this->hasMany(ApplicationDocument::class);
     }
+
+
+public function interviewSchedules(): HasMany
+{
+    return $this->hasMany(InterviewSchedule::class)
+        ->latest('scheduled_at');
+}
+
 }

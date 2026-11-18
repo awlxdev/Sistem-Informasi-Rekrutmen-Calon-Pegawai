@@ -96,7 +96,7 @@
     </div>
 </nav>
 
-<style>
+<style nonce="{{ Vite::cspNonce() }}">
     /* =========================================
        APPLICANT NAVBAR - PREMIUM SOFT 3D
     ========================================= */
@@ -512,7 +512,7 @@
     }
 </style>
 
-<script>
+<script nonce="{{ Vite::cspNonce() }}">
 (function () {
     function initializeApplicantNavbar() {
         document.querySelectorAll(".applicant-navbar").forEach(function (navbar) {

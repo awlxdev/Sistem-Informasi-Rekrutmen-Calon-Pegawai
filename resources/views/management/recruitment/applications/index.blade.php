@@ -3,7 +3,7 @@
 @section('title', 'Data Lamaran')
 
 @push('styles')
-<style>
+<style nonce="{{ Vite::cspNonce() }}">
     /* ==========================================
        ADMIN - DATA LAMARAN
        Terisolasi agar tampilan HRD tidak berubah

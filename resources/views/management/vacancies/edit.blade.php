@@ -3,7 +3,7 @@
 @section('title', 'Edit Lowongan Pekerjaan')
 
 @push('styles')
-<style>
+<style nonce="{{ Vite::cspNonce() }}">
     .panel-content > .container-fluid.hrd-page-shell.hrd-vacancy-form-page {
         width: 100% !important;
         max-width: none !important;

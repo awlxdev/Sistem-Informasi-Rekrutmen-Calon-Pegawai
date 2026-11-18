@@ -3,10 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Vacancy;
+use App\Models\Province;
+use App\Models\Regency;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class VacancyManagementController extends Controller
 {
@@ -27,6 +30,73 @@ class VacancyManagementController extends Controller
         ];
     }
 
+    private function locationFormData(?Vacancy $vacancy = null): array
+    {
+        $selectedProvinceId = null;
+        $selectedRegencyId = null;
+
+        if ($vacancy && $vacancy->location) {
+            $location = trim($vacancy->location);
+            $parts = explode(', ', $location);
+
+            if (count($parts) >= 2) {
+                $provinceName = array_pop($parts);
+                $regencyName = implode(', ', $parts);
+
+                $regency = Regency::with('province')
+                    ->where('name', $regencyName)
+                    ->whereHas('province', function ($query) use ($provinceName) {
+                        $query->where('name', $provinceName);
+                    })
+                    ->first();
+            } else {
+                $regency = Regency::with('province')
+                    ->where('name', $location)
+                    ->first();
+            }
+
+            if ($regency) {
+                $selectedProvinceId = $regency->province_id;
+                $selectedRegencyId = $regency->id;
+            }
+        }
+
+        return [
+            'provinces' => Province::orderBy('name')->get(['id', 'name']),
+            'selectedProvinceId' => $selectedProvinceId,
+            'selectedRegencyId' => $selectedRegencyId,
+        ];
+    }
+
+    public function regencies(Province $province)
+    {
+        return response()->json(
+            $province->regencies()
+                ->orderBy('name')
+                ->get(['id', 'name'])
+        );
+    }
+
+    private function applySelectedLocation(array &$validated, Request $request): void
+    {
+        if ($request->filled('regency_id')) {
+            $regency = Regency::with('province')
+                ->findOrFail((int) $request->input('regency_id'));
+
+            if (
+                !$request->filled('province_id') ||
+                (int) $request->input('province_id') !== (int) $regency->province_id
+            ) {
+                throw ValidationException::withMessages([
+                    'regency_id' => 'Kabupaten/kota tidak sesuai dengan provinsi yang dipilih.',
+                ]);
+            }
+
+            $validated['location'] = $regency->name . ', ' . $regency->province->name;
+        }
+
+        unset($validated['province_id'], $validated['regency_id']);
+    }
     private function validationRules(?Vacancy $vacancy = null): array
     {
         return [
@@ -34,6 +104,8 @@ class VacancyManagementController extends Controller
             'department' => ['nullable', 'string', 'max:100'],
             'employment_type' => ['nullable', 'string', 'max:50'],
             'location' => ['nullable', 'string', 'max:150'],
+            'province_id' => ['nullable', 'integer', 'exists:provinces,id'],
+            'regency_id' => ['nullable', 'required_with:province_id', 'integer', 'exists:regencies,id'],
             'description' => ['required', 'string', 'max:50000'],
             'requirements' => ['nullable', 'string', 'max:50000'],
             'responsibilities' => ['nullable', 'string', 'max:50000'],
@@ -136,7 +208,10 @@ class VacancyManagementController extends Controller
     {
         return view(
             'management.vacancies.create',
-            $this->pageData($request)
+            array_merge(
+                $this->pageData($request),
+                $this->locationFormData()
+            )
         );
     }
 
@@ -152,6 +227,8 @@ class VacancyManagementController extends Controller
                 'closing_date.after_or_equal' => 'Batas pendaftaran tidak boleh sebelum tanggal publikasi.',
             ]
         );
+
+        $this->applySelectedLocation($validated, $request);
 
         $validated['slug'] = $this->makeUniqueSlug($validated['title']);
         $validated['created_by'] = $request->user()->id;
@@ -173,7 +250,8 @@ class VacancyManagementController extends Controller
             'management.vacancies.edit',
             array_merge(
                 $this->pageData($request),
-                compact('vacancy')
+                compact('vacancy'),
+                $this->locationFormData($vacancy)
             )
         );
     }
@@ -190,6 +268,8 @@ class VacancyManagementController extends Controller
                 'closing_date.after_or_equal' => 'Batas pendaftaran tidak boleh sebelum tanggal publikasi.',
             ]
         );
+
+        $this->applySelectedLocation($validated, $request);
 
         $validated['slug'] = $this->makeUniqueSlug(
             $validated['title'],

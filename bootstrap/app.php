@@ -4,6 +4,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use App\Http\Middleware\CheckRole;
+use App\Http\Middleware\SecurityHeaders;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -14,8 +15,14 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         // Trust HTTPS forwarding only from the local Cloudflare Tunnel connector.
         $middleware->trustProxies(at: ['127.0.0.1', '::1']);
+
         $middleware->alias([
             'role' => CheckRole::class,
+        ]);
+
+        // Security headers untuk seluruh route web.
+        $middleware->web(append: [
+            SecurityHeaders::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

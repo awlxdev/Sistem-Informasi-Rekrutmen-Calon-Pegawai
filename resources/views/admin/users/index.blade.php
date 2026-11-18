@@ -3,7 +3,7 @@
 @section('title', 'Manajemen Pengguna')
 
 @push('styles')
-<style>
+<style nonce="{{ Vite::cspNonce() }}">
     /* ADMIN USER MANAGEMENT — CONSISTENT WITH ADMIN DASHBOARD */
     .admin-users-page {
         width: 100%;
@@ -684,7 +684,7 @@
                                         <form
                                             method="POST"
                                             action="{{ route('admin.users.toggle-status', $user) }}"
-                                            onsubmit="return confirm('Apakah Anda yakin ingin mengubah status akun ini?')"
+                                            data-confirm="Apakah Anda yakin ingin mengubah status akun ini?"
                                         >
                                             @csrf
                                             @method('PATCH')

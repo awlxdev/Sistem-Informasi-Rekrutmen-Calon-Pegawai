@@ -103,6 +103,7 @@ class RecruitmentManagementController extends Controller
             'vacancy',
             'documents.verifier',
             'reviewer',
+            'interviewSchedules.creator',
         ]);
 
         return view(
@@ -263,7 +264,8 @@ class RecruitmentManagementController extends Controller
         abort_unless(
             $request->routeIs(
                 'admin.applications.acceptance-print',
-                'hrd.applications.acceptance-print'
+                'hrd.applications.acceptance-print',
+                'pelamar.applications.acceptance-print'
             ),
             403
         );
@@ -277,7 +279,15 @@ class RecruitmentManagementController extends Controller
             'reviewer',
         ]);
 
-        // Ambil foto dari penyimpanan privat jika tersedia.
+
+        // Pelamar hanya boleh membuka surat milik akun sendiri.
+        if ($request->routeIs('pelamar.applications.acceptance-print')) {
+            abort_unless(
+                $application->applicant?->user_id === $request->user()->id,
+                403
+            );
+        }
+// Ambil foto dari penyimpanan privat jika tersedia.
         $photoData = null;
         $photoPath = $application->applicant?->photo_path;
 
@@ -327,8 +337,13 @@ class RecruitmentManagementController extends Controller
                 'downloadFileName' => $downloadFileName,
                 'routePrefix' => str_starts_with(
                     $request->route()->getName() ?? '',
-                    'hrd.'
-                ) ? 'hrd' : 'admin',
+                    'pelamar.'
+                ) ? 'pelamar' : (
+                    str_starts_with(
+                        $request->route()->getName() ?? '',
+                        'hrd.'
+                    ) ? 'hrd' : 'admin'
+                ),
             ]
         );
     }
@@ -365,6 +380,114 @@ class RecruitmentManagementController extends Controller
         );
     }
 
+
+    /**
+     * Simpan jadwal interview pelamar menggunakan zona waktu WIT.
+     */
+    public function storeInterviewSchedule(
+        Request $request,
+        Application $application
+    ) {
+        abort_unless(
+            $request->user() && $request->user()->isHrd(),
+            403
+        );
+
+        if (!in_array($application->status, ['reviewing', 'accepted'], true)) {
+            return back()
+                ->withErrors([
+                    'application' => 'Jadwal interview hanya dapat dibuat untuk lamaran yang sedang ditinjau atau sudah diterima.',
+                ])
+                ->withInput();
+        }
+
+        $validated = $request->validate([
+            'scheduled_at' => [
+                'required',
+                'date_format:Y-m-d\TH:i',
+            ],
+            'method' => [
+                'required',
+                'in:online,offline',
+            ],
+            'location' => [
+                'nullable',
+                'required_if:method,offline',
+                'string',
+                'max:255',
+            ],
+            'meeting_url' => [
+                'nullable',
+                'required_if:method,online',
+                'url',
+                'max:2048',
+            ],
+            'notes' => [
+                'nullable',
+                'string',
+                'max:3000',
+            ],
+        ], [
+            'scheduled_at.required' => 'Tanggal dan waktu interview wajib diisi.',
+            'scheduled_at.date_format' => 'Format tanggal dan waktu interview tidak valid.',
+            'method.required' => 'Metode interview wajib dipilih.',
+            'method.in' => 'Metode interview tidak valid.',
+            'location.required_if' => 'Lokasi interview wajib diisi untuk metode offline.',
+            'meeting_url.required_if' => 'Link meeting wajib diisi untuk metode online.',
+            'meeting_url.url' => 'Link meeting harus berupa URL yang valid.',
+            'notes.max' => 'Catatan maksimal 3.000 karakter.',
+        ]);
+
+        $scheduledAt = \Carbon\Carbon::createFromFormat(
+            'Y-m-d\TH:i',
+            $validated['scheduled_at'],
+            'Asia/Jayapura'
+        );
+
+        if (!$scheduledAt->isAfter(now('Asia/Jayapura'))) {
+            return back()
+                ->withErrors([
+                    'scheduled_at' => 'Jadwal interview harus berada di waktu mendatang berdasarkan WIT.',
+                ])
+                ->withInput();
+        }
+
+        \Illuminate\Support\Facades\DB::transaction(function () use (
+            $application,
+            $validated,
+            $scheduledAt,
+            $request
+        ) {
+            $previousSchedule = $application
+                ->interviewSchedules()
+                ->where('status', 'scheduled')
+                ->reorder()
+                ->latest('id')
+                ->first();
+
+            if ($previousSchedule) {
+                $previousSchedule->update([
+                    'status' => 'rescheduled',
+                ]);
+            }
+
+            $application->interviewSchedules()->create([
+                'scheduled_at' => $scheduledAt->format('Y-m-d H:i:s'),
+                'timezone' => 'Asia/Jayapura',
+                'method' => $validated['method'],
+                'location' => $validated['location'] ?? null,
+                'meeting_url' => $validated['meeting_url'] ?? null,
+                'notes' => $validated['notes'] ?? null,
+                'status' => 'scheduled',
+                'created_by' => $request->user()->id,
+            ]);
+        });
+
+        return back()->with(
+            'success',
+            'Jadwal interview berhasil disimpan menggunakan waktu WIT.'
+        );
+    }
     public function verifyDocument(
         Request $request,
         Application $application,

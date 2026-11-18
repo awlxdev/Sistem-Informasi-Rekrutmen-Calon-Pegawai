@@ -7,7 +7,7 @@
 @section('title', 'Biodata Pelamar')
 
 @section('styles')
-<style>
+<style nonce="{{ Vite::cspNonce() }}">
     :root {
         --profile-primary: #073b3a;
         --profile-primary-dark: #052c2b;
@@ -191,18 +191,32 @@
     }
 
     .completion-track {
+        display: block;
+        width: 100%;
         height: 8px;
         overflow: hidden;
+        appearance: none;
+        -webkit-appearance: none;
+        border: 0;
         border-radius: 20px;
         background: #edf0ec;
         margin: 12px 0 10px;
     }
 
-    .completion-fill {
-        height: 100%;
-        border-radius: inherit;
+    .completion-track::-webkit-progress-bar {
+        background: #edf0ec;
+        border-radius: 20px;
+    }
+
+    .completion-track::-webkit-progress-value {
         background: linear-gradient(90deg, #0c5a50, #c8a96b);
+        border-radius: 20px;
         transition: width .3s ease;
+    }
+
+    .completion-track::-moz-progress-bar {
+        background: linear-gradient(90deg, #0c5a50, #c8a96b);
+        border-radius: 20px;
     }
 
     .sidebar-nav {
@@ -629,12 +643,12 @@
                         <span class="completion-number">{{ $completion }}%</span>
                     </div>
 
-                    <div class="completion-track">
-                        <<div
-    class="completion-fill"
-    style="--completion-width: {{ (int) $completion }}%;"
-></div>
-                    </div>
+                    <progress
+                        class="completion-track"
+                        value="{{ (int) $completion }}"
+                        max="100"
+                        aria-label="Kelengkapan profil {{ $completion }} persen"
+                    ></progress>
 
                     <p class="small text-secondary mb-0">
                         {{ $filledFields }} dari {{ count($profileFields) }} informasi telah diisi.
@@ -1027,7 +1041,7 @@
 @endsection
 
 @section('scripts')
-<script>
+<script nonce="{{ Vite::cspNonce() }}">
 document.addEventListener('DOMContentLoaded', function () {
     const photoInput = document.getElementById('photo');
     const cvInput = document.getElementById('cv');

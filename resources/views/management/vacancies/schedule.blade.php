@@ -3,7 +3,7 @@
 @section('title', 'Jadwal Pendaftaran')
 
 @section('styles')
-<style>
+<style nonce="{{ Vite::cspNonce() }}">
 /* HRD PAGE SHELL - KONSISTENSI AREA KONTEN */
 .panel-content > .container-fluid.hrd-page-shell.hrd-schedule-page {
     width: 100% !important;

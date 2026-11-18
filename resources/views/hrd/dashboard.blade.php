@@ -3,7 +3,7 @@
 @section('title', 'Dashboard HRD')
 
 @push('styles')
-<style>
+<style nonce="{{ Vite::cspNonce() }}">
     /* HRD PAGE SHELL - KONSISTENSI AREA KONTEN */
     .panel-content > .container-fluid.hrd-page-shell {
         width: 100% !important;

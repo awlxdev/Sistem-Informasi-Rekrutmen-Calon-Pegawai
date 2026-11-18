@@ -152,7 +152,7 @@
 @endsection
 
 @push('styles')
-<style>
+<style nonce="{{ Vite::cspNonce() }}">
 .applicant-page { color:#26342e; }
 .back-link {
     display:inline-flex;align-items:center;gap:8px;

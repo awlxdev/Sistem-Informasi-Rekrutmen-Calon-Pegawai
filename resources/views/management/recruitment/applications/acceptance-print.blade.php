@@ -7,7 +7,7 @@
 
     <title>{{ $downloadFileName }}</title>
 
-    <style>
+    <style nonce="{{ Vite::cspNonce() }}">
         :root {
             --emerald: #193c30;
             --emerald-dark: #103126;
@@ -393,11 +393,13 @@
 
     <div class="toolbar">
         <a class="back"
-            href="{{ route($routePrefix.'.applications.show', $application) }}">
+            href="{{ $routePrefix === 'pelamar'
+                ? route('pelamar.applications.index')
+                : route($routePrefix.'.applications.show', $application) }}">
             Kembali ke Detail Lamaran
         </a>
 
-        <button class="print" type="button" onclick="window.print()">
+        <button class="print" type="button" data-print>
             Cetak / Simpan PDF
         </button>
     </div>

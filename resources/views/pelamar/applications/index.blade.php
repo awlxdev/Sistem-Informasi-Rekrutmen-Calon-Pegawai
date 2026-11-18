@@ -112,7 +112,104 @@
                         </div>
                     @endif
 
-                    <div class="application-card-footer">
+                    @php
+                        $activeInterview = $application->interviewSchedules->first();
+
+                        $interviewDate = $activeInterview
+                            ? \Carbon\Carbon::createFromFormat(
+                                'Y-m-d H:i:s',
+                                $activeInterview->getRawOriginal('scheduled_at'),
+                                'Asia/Jayapura'
+                            )
+                            : null;
+                    @endphp
+
+                    @if($activeInterview)
+                        <div class="application-cover mt-3">
+                            <div class="d-flex align-items-center gap-2 mb-3">
+                                <i class="bi bi-calendar2-check text-success fs-5"></i>
+                                <strong>Informasi Jadwal Interview</strong>
+                                <span class="badge bg-success ms-auto">Terjadwal</span>
+                            </div>
+
+                            <div class="mb-2">
+                                <small class="d-block text-muted">Tanggal dan Waktu</small>
+                                <strong>
+                                    {{ $interviewDate->format('d M Y') }},
+                                    {{ $interviewDate->format('H:i') }} WIT
+                                </strong>
+                            </div>
+
+                            <div class="mb-2">
+                                <small class="d-block text-muted">Metode Interview</small>
+                                <strong>
+                                    {{ $activeInterview->method === 'online' ? 'Online' : 'Tatap muka / Offline' }}
+                                </strong>
+                            </div>
+
+                            @if($activeInterview->method === 'online' && $activeInterview->meeting_url)
+                                <div class="mb-2">
+                                    <small class="d-block text-muted">Link Meeting</small>
+                                    <a href="{{ $activeInterview->meeting_url }}"
+                                       target="_blank"
+                                       rel="noopener noreferrer">
+                                        Gabung Interview <i class="bi bi-box-arrow-up-right ms-1"></i>
+                                    </a>
+                                </div>
+                            @elseif($activeInterview->location)
+                                <div class="mb-2">
+                                    <small class="d-block text-muted">Lokasi Interview</small>
+                                    <strong>{{ $activeInterview->location }}</strong>
+                                </div>
+                            @endif
+
+                            @if($activeInterview->notes)
+                                <div class="mt-2">
+                                    <small class="d-block text-muted">Catatan dari HRD</small>
+                                    <p class="mb-0">{{ $activeInterview->notes }}</p>
+                                </div>
+                            @endif
+
+                            <small class="d-block text-muted mt-3">
+                                Pastikan Anda hadir tepat waktu sesuai jadwal WIT.
+                            </small>
+                        </div>
+                    @endif
+                    @if($application->status === 'accepted')
+        <div class="application-cover mt-3">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                <div>
+                    <strong class="d-block text-success mb-1">
+                        <i class="bi bi-patch-check-fill me-1"></i>
+                        Selamat, Anda Lulus Seleksi Administrasi
+                    </strong>
+                    <small class="text-muted">
+                        Surat kelulusan resmi sudah tersedia dan dapat dicetak.
+                    </small>
+                </div>
+
+                <a
+                    href="{{ route('pelamar.applications.acceptance-print', $application) }}"
+                    class="btn btn-success rounded-3"
+                    target="_blank"
+                    rel="noopener"
+                >
+                    <i class="bi bi-printer-fill me-1"></i>
+                    Cetak Kartu Kelulusan
+                </a>
+            </div>
+
+            <div class="mt-3 pt-3 border-top small text-muted">
+                <i class="bi bi-info-circle-fill me-1"></i>
+                Catatan: Silakan cetak atau simpan surat kelulusan ini
+                dalam format PDF. Simpan dokumen tersebut dengan baik
+                sebagai bukti resmi kelulusan Anda untuk keperluan
+                tahapan seleksi berikutnya.
+            </div>
+        </div>
+    @endif
+
+    <div class="application-card-footer">
                         <span>
                             <i class="bi bi-shield-check me-1"></i>
                             Simpan nomor lamaran untuk referensi Anda.
@@ -133,7 +230,7 @@
 @endsection
 
 @push('styles')
-<style>
+<style nonce="{{ Vite::cspNonce() }}">
 .applicant-page { color:#26342e; }
 .application-summary {
     display:flex;align-items:center;gap:14px;padding:17px 20px;
