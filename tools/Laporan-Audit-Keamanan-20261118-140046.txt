@@ -1,0 +1,188 @@
+AUDIT KEAMANAN WEBSITE LARAVEL
+Proyek: D:\PENDAFTARAN_CALON_PEGAWAI
+Waktu: 2026-11-18 14:00:46
+Mode: read-only; bukan penetration test atau uji beban.
+
+===== 1. STRUKTUR PROYEK DAN RUNTIME =====
+[PASS] [Project] Struktur Laravel - artisan dan composer.json ditemukan.
+[INFO] [Runtime] Versi PHP - PHP 8.5.6 (cli) (built: May  6 2026 09:31:05) (ZTS Visual C++ 2022 x64)
+[INFO] [Runtime] Versi Composer - Composer version 2.10.3 2026-08-27 13:34:23
+[INFO] [Runtime] Versi Node.js - v26.13.0
+[INFO] [Runtime] Versi npm - 12.0.2
+
+===== 2. KONFIGURASI LARAVEL DAN FILE RAHASIA =====
+[PASS] [Config] .env tersedia - File .env ditemukan. Nilai rahasia tidak ditampilkan.
+[FAIL] [Config] APP_DEBUG - APP_DEBUG aktif; berisiko membocorkan stack trace dan konfigurasi.
+         Saran: Matikan APP_DEBUG di server publik (false), lalu jalankan php artisan config:cache.
+[WARN] [Config] APP_ENV - APP_ENV bukan production (nilai: local).
+         Saran: Pastikan server publik memakai APP_ENV=production. Untuk localhost, nilai local dapat diterima.
+[PASS] [Config] APP_KEY - APP_KEY terisi (nilainya disembunyikan).
+[INFO] [Config] APP_URL - APP_URL menggunakan HTTP pada hostname lokal/development.
+[WARN] [Session] SESSION_SECURE_COOKIE - Secure cookie tidak dipastikan aktif.
+         Saran: Aktifkan SESSION_SECURE_COOKIE=true pada HTTPS production. Untuk localhost HTTP, nonaktif sementara dapat diperlukan.
+[INFO] [Session] SESSION_HTTP_ONLY - Nilai tidak didefinisikan; periksa default config/session.php Laravel.
+[INFO] [Session] SESSION_SAME_SITE - SameSite:  (atau default Laravel).
+[PASS] [Secrets] .env di .gitignore - .env tercantum di .gitignore.
+[INFO] [Secrets] File .env - File .env ada di root proyek; jangan sampai terpublikasi oleh web server.
+[PASS] [WebServer] .htaccess public - public/.htaccess ditemukan.
+
+===== 3. PEMERIKSAAN POLA SOURCE CODE =====
+[INFO] [CodeScan] Cakupan source scan - 65 file PHP/Blade pada app, routes, resources/views, config.
+[PASS] [CodeScan] Pemanggilan eval() - Tidak ditemukan pola yang dicari dalam cakupan scan.
+[PASS] [CodeScan] Pemanggilan shell berisiko - Tidak ditemukan pola yang dicari dalam cakupan scan.
+[WARN] [CodeScan] Query SQL mentah - 1 kecocokan pola ditemukan: app\Http\Controllers\VacancyManagementController.php:188
+         Saran: Audit setiap query mentah; gunakan binding parameter dan whitelist untuk nama kolom/order.
+[WARN] [CodeScan] Output Blade tidak di-escape - 3 kecocokan pola ditemukan: resources\views\pelamar\vacancies\show.blade.php:46, resources\views\pelamar\vacancies\show.blade.php:52, resources\views\pelamar\vacancies\show.blade.php:59
+         Saran: Pastikan konten sudah disanitasi; gunakan {{ }} untuk output biasa.
+[PASS] [CodeScan] Mass assignment berpotensi - Tidak ditemukan pola yang dicari dalam cakupan scan.
+[INFO] [CodeScan] Validasi upload perlu ditinjau - 5 kecocokan pola ditemukan: resources\views\components\pelamar-navbar.blade.php:541, resources\views\components\pelamar-navbar.blade.php:550, resources\views\layouts\app.blade.php:1202, resources\views\layouts\app.blade.php:1207, resources\views\pelamar\profile\edit.blade.php:1099
+         Saran: Pastikan validasi MIME, ekstensi, ukuran, nama acak, dan penyimpanan di luar public.
+[PASS] [CodeScan] Pengecualian CSRF global - Tidak ditemukan pola yang dicari dalam cakupan scan.
+
+===== 4. ROUTE, AUTHENTICATION, CSRF, DAN RATE LIMITING =====
+[PASS] [RateLimit] Indikator throttle - Ditemukan penggunaan throttle/rate limiter pada route atau auth controller.
+[INFO] [Auth] Middleware autentikasi - Route tampak menggunakan middleware auth; audit route sensitif secara manual.
+[PASS] [Captcha] Widget CAPTCHA - Widget CAPTCHA terdeteksi pada halaman login dan register.
+[PASS] [Captcha] Verifikasi CAPTCHA server - Indikator verifikasi CAPTCHA sisi server ditemukan di AuthController.
+[INFO] [CSRF] CSRF middleware - Tidak ditemukan pengecualian CSRF eksplisit di routes/web.php; pastikan middleware web aktif.
+
+===== 5. FILE SENSITIF, STORAGE, DAN PERMISSION =====
+[INFO] [Storage] public/storage - Symlink public/storage tidak ditemukan.
+[PASS] [Storage] Private storage - storage/app/private ditemukan; pastikan file sensitif diunduh melalui controller berotorisasi.
+[INFO] [Permission] ACL storage - ACL dapat dibaca; pemilik: DESKTOP-PJDOO6E\modal. Perlu tinjauan manual untuk hak Modify/Write.
+[INFO] [Permission] ACL bootstrap\cache - ACL dapat dibaca; pemilik: DESKTOP-PJDOO6E\modal. Perlu tinjauan manual untuk hak Modify/Write.
+[WARN] [Exposure] Folder .git - Folder .git ada pada root proyek. Pastikan document root hanya public/ dan request /.git diblokir.
+
+===== 6. DEPENDENCY DAN KERENTANAN PAKET =====
+[PASS] [Dependency] composer audit - Composer tidak melaporkan advisory keamanan yang diketahui.
+[PASS] [Dependency] npm audit production - Tidak ada kerentanan production yang dilaporkan npm audit.
+
+===== 7. DIAGNOSTIK ARTISAN =====
+[PASS] [Laravel] php artisan about - Perintah artisan about berhasil dijalankan.
+  
+    Environment .........................................................  
+    Application Name .......................... Pendaftaran Calon Pegawai  
+    Laravel Version ............................................. 12.71.0  
+    PHP Version ................................................... 8.5.6  
+    Composer Version ............................................. 2.10.3  
+    Environment ................................................... local  
+    Debug Mode .................................................. ENABLED  
+    URL ....................................... pendaftaran-dev.test:8000  
+    Maintenance Mode ................................................ OFF  
+    Timezone ............................................... Asia/Jakarta  
+    Locale ........................................................... id  
+[INFO] [Laravel] Route list - 65 baris route terdeteksi oleh route:list.
+
+===== 8. PEMERIKSAAN HTTP DAN SECURITY HEADERS =====
+[INFO] [HTTP] Target HTTP - Melakukan GET ringan ke http://pendaftaran-dev.test:8000 (tanpa autentikasi dan tanpa payload serangan).
+[PASS] [HTTP] Homepage merespons - HTTP 200.
+[INFO] [Headers] HSTS - Tidak dinilai karena target menggunakan HTTP.
+[WARN] [Headers] Content-Security-Policy - Header tidak terdeteksi pada respons homepage.
+         Saran: Terapkan CSP yang sesuai dengan asset dan integrasi pihak ketiga.
+[WARN] [Headers] X-Content-Type-Options - Header tidak terdeteksi pada respons homepage.
+         Saran: Set X-Content-Type-Options: nosniff.
+[WARN] [Headers] X-Frame-Options - Header tidak terdeteksi pada respons homepage.
+         Saran: Gunakan frame-ancestors CSP atau X-Frame-Options untuk mencegah clickjacking.
+[WARN] [Headers] Referrer-Policy - Header tidak terdeteksi pada respons homepage.
+         Saran: Atur Referrer-Policy, misalnya strict-origin-when-cross-origin.
+[WARN] [Headers] Permissions-Policy - Header tidak terdeteksi pada respons homepage.
+         Saran: Batasi browser features yang tidak digunakan.
+[PASS] [Exposure] HTTP /.env - Tidak terbuka secara langsung (HTTP 404).
+[PASS] [Exposure] HTTP /.git/HEAD - Tidak terbuka secara langsung (HTTP 404).
+[PASS] [Exposure] HTTP /composer.json - Tidak terbuka secara langsung (HTTP 404).
+[PASS] [Exposure] HTTP /composer.lock - Tidak terbuka secara langsung (HTTP 404).
+[PASS] [Exposure] HTTP /package.json - Tidak terbuka secara langsung (HTTP 404).
+[PASS] [Exposure] HTTP /phpinfo.php - Tidak terbuka secara langsung (HTTP 404).
+[PASS] [Exposure] HTTP /vendor/ - Tidak terbuka secara langsung (HTTP 404).
+[WARN] [Transport] HTTPS - Target menggunakan HTTP; sesuai untuk localhost, tidak aman untuk akses publik.
+         Saran: Aktifkan TLS/HTTPS sebelum deployment publik.
+
+===== 9. KESIAPAN MITIGASI DDOS (TANPA SERANGAN) =====
+[WARN] [DDoS] Indikator rate limiting server - Tidak ditemukan konfigurasi rate limit pada file konfigurasi server yang diperiksa.
+         Saran: Atur rate limiting di reverse proxy/web server dan batasi endpoint mahal.
+[WARN] [DDoS] Batas ukuran request - Batas ukuran request server tidak terdeteksi di file konfigurasi yang diperiksa.
+         Saran: Atur batas body/upload di web server dan PHP.
+[WARN] [DDoS] Perlindungan CDN/WAF - Indikator CDN/WAF tidak ditemukan pada konfigurasi lokal yang diperiksa.
+         Saran: Untuk website publik, gunakan CDN/WAF/DDoS protection dan batasi akses langsung ke origin.
+[INFO] [DDoS] Batas audit DDoS - Tidak dilakukan flood, stress test, atau pengiriman trafik masif. Ketahanan DDoS tidak dapat dibuktikan dari audit lokal.
+         Saran: Lakukan penilaian kapasitas dan uji beban terjadwal hanya pada lingkungan milik sendiri dengan persetujuan dan batas trafik yang jelas.
+
+===== 10. RINGKASAN HASIL =====
+PASS=24 | WARN=14 | FAIL=1 | INFO=19 | TOTAL=58
+KESIMPULAN: Ada temuan berisiko tinggi yang perlu ditangani terlebih dahulu.
+
+Rincian temuan:
+[PASS] [Project] Struktur Laravel - artisan dan composer.json ditemukan.
+[INFO] [Runtime] Versi PHP - PHP 8.5.6 (cli) (built: May  6 2026 09:31:05) (ZTS Visual C++ 2022 x64)
+[INFO] [Runtime] Versi Composer - Composer version 2.10.3 2026-08-27 13:34:23
+[INFO] [Runtime] Versi Node.js - v26.13.0
+[INFO] [Runtime] Versi npm - 12.0.2
+[PASS] [Config] .env tersedia - File .env ditemukan. Nilai rahasia tidak ditampilkan.
+[FAIL] [Config] APP_DEBUG - APP_DEBUG aktif; berisiko membocorkan stack trace dan konfigurasi.
+Saran: Matikan APP_DEBUG di server publik (false), lalu jalankan php artisan config:cache.
+[WARN] [Config] APP_ENV - APP_ENV bukan production (nilai: local).
+Saran: Pastikan server publik memakai APP_ENV=production. Untuk localhost, nilai local dapat diterima.
+[PASS] [Config] APP_KEY - APP_KEY terisi (nilainya disembunyikan).
+[INFO] [Config] APP_URL - APP_URL menggunakan HTTP pada hostname lokal/development.
+[WARN] [Session] SESSION_SECURE_COOKIE - Secure cookie tidak dipastikan aktif.
+Saran: Aktifkan SESSION_SECURE_COOKIE=true pada HTTPS production. Untuk localhost HTTP, nonaktif sementara dapat diperlukan.
+[INFO] [Session] SESSION_HTTP_ONLY - Nilai tidak didefinisikan; periksa default config/session.php Laravel.
+[INFO] [Session] SESSION_SAME_SITE - SameSite:  (atau default Laravel).
+[PASS] [Secrets] .env di .gitignore - .env tercantum di .gitignore.
+[INFO] [Secrets] File .env - File .env ada di root proyek; jangan sampai terpublikasi oleh web server.
+[PASS] [WebServer] .htaccess public - public/.htaccess ditemukan.
+[INFO] [CodeScan] Cakupan source scan - 65 file PHP/Blade pada app, routes, resources/views, config.
+[PASS] [CodeScan] Pemanggilan eval() - Tidak ditemukan pola yang dicari dalam cakupan scan.
+[PASS] [CodeScan] Pemanggilan shell berisiko - Tidak ditemukan pola yang dicari dalam cakupan scan.
+[WARN] [CodeScan] Query SQL mentah - 1 kecocokan pola ditemukan: app\Http\Controllers\VacancyManagementController.php:188
+Saran: Audit setiap query mentah; gunakan binding parameter dan whitelist untuk nama kolom/order.
+[WARN] [CodeScan] Output Blade tidak di-escape - 3 kecocokan pola ditemukan: resources\views\pelamar\vacancies\show.blade.php:46, resources\views\pelamar\vacancies\show.blade.php:52, resources\views\pelamar\vacancies\show.blade.php:59
+Saran: Pastikan konten sudah disanitasi; gunakan {{ }} untuk output biasa.
+[PASS] [CodeScan] Mass assignment berpotensi - Tidak ditemukan pola yang dicari dalam cakupan scan.
+[INFO] [CodeScan] Validasi upload perlu ditinjau - 5 kecocokan pola ditemukan: resources\views\components\pelamar-navbar.blade.php:541, resources\views\components\pelamar-navbar.blade.php:550, resources\views\layouts\app.blade.php:1202, resources\views\layouts\app.blade.php:1207, resources\views\pelamar\profile\edit.blade.php:1099
+Saran: Pastikan validasi MIME, ekstensi, ukuran, nama acak, dan penyimpanan di luar public.
+[PASS] [CodeScan] Pengecualian CSRF global - Tidak ditemukan pola yang dicari dalam cakupan scan.
+[PASS] [RateLimit] Indikator throttle - Ditemukan penggunaan throttle/rate limiter pada route atau auth controller.
+[INFO] [Auth] Middleware autentikasi - Route tampak menggunakan middleware auth; audit route sensitif secara manual.
+[PASS] [Captcha] Widget CAPTCHA - Widget CAPTCHA terdeteksi pada halaman login dan register.
+[PASS] [Captcha] Verifikasi CAPTCHA server - Indikator verifikasi CAPTCHA sisi server ditemukan di AuthController.
+[INFO] [CSRF] CSRF middleware - Tidak ditemukan pengecualian CSRF eksplisit di routes/web.php; pastikan middleware web aktif.
+[INFO] [Storage] public/storage - Symlink public/storage tidak ditemukan.
+[PASS] [Storage] Private storage - storage/app/private ditemukan; pastikan file sensitif diunduh melalui controller berotorisasi.
+[INFO] [Permission] ACL storage - ACL dapat dibaca; pemilik: DESKTOP-PJDOO6E\modal. Perlu tinjauan manual untuk hak Modify/Write.
+[INFO] [Permission] ACL bootstrap\cache - ACL dapat dibaca; pemilik: DESKTOP-PJDOO6E\modal. Perlu tinjauan manual untuk hak Modify/Write.
+[WARN] [Exposure] Folder .git - Folder .git ada pada root proyek. Pastikan document root hanya public/ dan request /.git diblokir.
+[PASS] [Dependency] composer audit - Composer tidak melaporkan advisory keamanan yang diketahui.
+[PASS] [Dependency] npm audit production - Tidak ada kerentanan production yang dilaporkan npm audit.
+[PASS] [Laravel] php artisan about - Perintah artisan about berhasil dijalankan.
+[INFO] [Laravel] Route list - 65 baris route terdeteksi oleh route:list.
+[INFO] [HTTP] Target HTTP - Melakukan GET ringan ke http://pendaftaran-dev.test:8000 (tanpa autentikasi dan tanpa payload serangan).
+[PASS] [HTTP] Homepage merespons - HTTP 200.
+[INFO] [Headers] HSTS - Tidak dinilai karena target menggunakan HTTP.
+[WARN] [Headers] Content-Security-Policy - Header tidak terdeteksi pada respons homepage.
+Saran: Terapkan CSP yang sesuai dengan asset dan integrasi pihak ketiga.
+[WARN] [Headers] X-Content-Type-Options - Header tidak terdeteksi pada respons homepage.
+Saran: Set X-Content-Type-Options: nosniff.
+[WARN] [Headers] X-Frame-Options - Header tidak terdeteksi pada respons homepage.
+Saran: Gunakan frame-ancestors CSP atau X-Frame-Options untuk mencegah clickjacking.
+[WARN] [Headers] Referrer-Policy - Header tidak terdeteksi pada respons homepage.
+Saran: Atur Referrer-Policy, misalnya strict-origin-when-cross-origin.
+[WARN] [Headers] Permissions-Policy - Header tidak terdeteksi pada respons homepage.
+Saran: Batasi browser features yang tidak digunakan.
+[PASS] [Exposure] HTTP /.env - Tidak terbuka secara langsung (HTTP 404).
+[PASS] [Exposure] HTTP /.git/HEAD - Tidak terbuka secara langsung (HTTP 404).
+[PASS] [Exposure] HTTP /composer.json - Tidak terbuka secara langsung (HTTP 404).
+[PASS] [Exposure] HTTP /composer.lock - Tidak terbuka secara langsung (HTTP 404).
+[PASS] [Exposure] HTTP /package.json - Tidak terbuka secara langsung (HTTP 404).
+[PASS] [Exposure] HTTP /phpinfo.php - Tidak terbuka secara langsung (HTTP 404).
+[PASS] [Exposure] HTTP /vendor/ - Tidak terbuka secara langsung (HTTP 404).
+[WARN] [Transport] HTTPS - Target menggunakan HTTP; sesuai untuk localhost, tidak aman untuk akses publik.
+Saran: Aktifkan TLS/HTTPS sebelum deployment publik.
+[WARN] [DDoS] Indikator rate limiting server - Tidak ditemukan konfigurasi rate limit pada file konfigurasi server yang diperiksa.
+Saran: Atur rate limiting di reverse proxy/web server dan batasi endpoint mahal.
+[WARN] [DDoS] Batas ukuran request - Batas ukuran request server tidak terdeteksi di file konfigurasi yang diperiksa.
+Saran: Atur batas body/upload di web server dan PHP.
+[WARN] [DDoS] Perlindungan CDN/WAF - Indikator CDN/WAF tidak ditemukan pada konfigurasi lokal yang diperiksa.
+Saran: Untuk website publik, gunakan CDN/WAF/DDoS protection dan batasi akses langsung ke origin.
+[INFO] [DDoS] Batas audit DDoS - Tidak dilakukan flood, stress test, atau pengiriman trafik masif. Ketahanan DDoS tidak dapat dibuktikan dari audit lokal.
+Saran: Lakukan penilaian kapasitas dan uji beban terjadwal hanya pada lingkungan milik sendiri dengan persetujuan dan batas trafik yang jelas.
