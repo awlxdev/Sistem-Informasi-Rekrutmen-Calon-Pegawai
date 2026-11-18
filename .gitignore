@@ -70,3 +70,5 @@ Thumbs.db
 # Personal images - do not publish
 /public/images/qr-sri-wahyuli.png
 /public/images/Sri Wahyuli ttd.png
+# Local security audit reports
+tools/Laporan-Audit-Keamanan-*.txt
